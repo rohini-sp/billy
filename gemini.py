@@ -125,8 +125,8 @@ class InvoiceExtractor:
             return file.read()
 
 
-# Usage Example:
-def extraction():
+
+def parser():
 
     # Initialize the InvoiceExtractor object with API key and prompt file path
     extractor = InvoiceExtractor(API_KEY, r"prompt.txt")

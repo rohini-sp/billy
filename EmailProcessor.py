@@ -149,13 +149,13 @@ def send_file_via_gmail(service, sender, to, subject, body, file_path):
         print(f'An error occurred: {error}')
         return None
 
-def SEND_FILE():
+def SEND_FILE(send_to):
     try:
         service_manager = GoogleServiceManager(CREDENTIALS)
         email_processor = EmailProcessor(service_manager, LABEL_NAME)
 
-        sender = "aryandhanawade2005@gmai.com"
-        to = "dxdsec@gmail.com"
+        sender = "aryandhanawade2005@gmail.com"
+        to = send_to
         subject = "Processed Invoice Data"
         body = "This Data is processed invoice data via gemini."
         file_path = "output.csv"
@@ -166,4 +166,4 @@ def SEND_FILE():
         print(f"Error: {str(e)}")
         raise
 
-SEND_FILE()
+

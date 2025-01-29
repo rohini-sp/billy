@@ -33,7 +33,13 @@ For any text in non-Latin scripts (such as Hindi or other character-based langua
     },
     "Invoice Number": "12345",
     "Invoice Date": "YYYY-MM-DD",
-    "Currency": "USD"
+    "Currency": "USD",
+    "Confidence Score": "95 Percent"
     }
 
 📌 If any field is missing, return "Missing" instead of leaving it blank.
+
+📌 Overall Confidence Score:
+Provide a single confidence score as a percentage value (from 0% to 100%) that indicates the overall accuracy of the parsing and extraction process. Base the confidence score on the clarity of extracted data, language translation success, text recognition quality, and error detection during parsing.
+
+If parsing is unsuccessful or critical fields are missing, return "0%" as the confidence score.
