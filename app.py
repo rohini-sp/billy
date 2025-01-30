@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import atexit
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import pandas as pd
 from EmailProcessor import GET_FILE, SEND_FILE
@@ -7,6 +8,41 @@ from gemini import InvoiceExtractor
 from config import API_KEY, PROMPT_PATH, OUTPUT_FILE
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+import streamlit as st
+
+# List of files to be deleted on exit
+
+def delete_files():
+    """Deletes the specified files upon app closure."""
+    import os
+
+    directory = "downloads"  # Change this to your directory
+    absolute_paths = [os.path.join(directory, file) for file in os.listdir(directory)]
+
+    print(absolute_paths)  # List of absolute paths
+
+    FILES_TO_DELETE = ["processed_invoice.jpg","temp_page_image.png","final_binarized_invoice.jpg","output.csv","token.json"] + absolute_paths  
+    for file in FILES_TO_DELETE:
+        file_path = os.path.join(os.getcwd(), file)
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print(f"Deleted: {file_path}")
+            except Exception as e:
+                print(f"Error deleting {file_path}: {e}")
+
+def email_dialog_box():
+    with st.form("email_form", clear_on_submit=True):
+        recipient_email = st.text_input("Recipient Email Address", placeholder="Enter the recipient's email here...")
+        submit_email = st.form_submit_button("Send Email")
+
+        if submit_email:
+            if recipient_email and "@" in recipient_email:
+                SEND_FILE(recipient_email)
+                st.success(f"File sent successfully to {recipient_email}!")
+            else:
+                st.error("Please enter a valid email address.")
+
 
 def settings_page():
     st.title("🛠️ Settings")
@@ -40,16 +76,13 @@ def settings_page():
     st.write(f"Preferred File Format: {st.session_state.get('file_format', 'Not set')}")
 
 # Configuration
-def main_page():
-    st.title("📄 Invoice Parsing App")
-
-    # Input Method Selection
-    st.sidebar.header("Upload Method")
-    input_method = st.sidebar.radio("Choose an option:", ("Upload File", "Fetch from Gmail"))
+def main_page(input_method):
+    st.subheader("📄 Invoice Parsing App")
 
     uploaded_file = None
     if input_method == "Upload File":
-        uploaded_files = st.file_uploader("Upload Invoices (Image/PDF)", type=["jpg", "jpeg", "png", "pdf"], accept_multiple_files=True)
+        uploaded_files = st.file_uploader("Upload Invoices (Image/PDF)", type=["jpg", "jpeg", "png", "pdf"],
+                                          accept_multiple_files=True)
         if uploaded_files:
             for uploaded_file in uploaded_files:
                 file_ext = uploaded_file.name.split('.')[-1].lower()
@@ -63,12 +96,8 @@ def main_page():
                     img_path = os.path.join(os.getcwd(), 'downloads', f'preview_{uploaded_file.name}.png')
                     pix.save(img_path)
                     st.image(img_path, caption=f'PDF Preview - {uploaded_file.name}', use_column_width=True)
+
             file_path = os.path.join(os.getcwd(), "downloads", uploaded_file.name)
-            with open(file_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            st.success(f"File {uploaded_file.name} uploaded successfully!")
-            # Preview File Feature
-            file_path = os.path.join("downloads", uploaded_file.name)
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
             st.success(f"File {uploaded_file.name} uploaded successfully!")
@@ -84,16 +113,15 @@ def main_page():
     # Parsing Button
     if st.button("Parse Invoice"):
         if uploaded_file or input_method == "Fetch from Gmail":
-            extractor = InvoiceExtractor(api_key=API_KEY, prompt_path=PROMPT_PATH)
-            file_paths = [os.path.join("downloads/", file) for file in os.listdir("downloads")]
-            st.info(file_paths)
-            extractor.process_multiple_invoices(file_paths, OUTPUT_FILE)
-            st.success("Parsing complete! Data extracted successfully.")
-            # Clean up temporary files
-            for file in os.listdir(os.path.join(os.getcwd(), "downloads")):
-                file_path = os.path.join(os.getcwd(), "downloads", file)
-                if file != OUTPUT_FILE:
-                    os.remove(file_path)
+            with st.status("🔄 Parsing invoices... Please wait.", expanded=True) as status:
+                extractor = InvoiceExtractor(api_key=API_KEY, prompt_path=PROMPT_PATH)
+                file_paths = [os.path.abspath(os.path.join("downloads/", file)) for file in os.listdir("downloads")]
+
+                st.toast("📂 Processing files!")  # Show files being processed
+                
+                extractor.process_multiple_invoices(file_paths, OUTPUT_FILE)
+
+                status.update(label="✅ Parsing complete! Data extracted successfully.", state="complete")
         else:
             st.warning("Please upload a file or fetch one from Gmail.")
 
@@ -110,24 +138,29 @@ def main_page():
             file_name="parsed_invoice.csv",
             mime="text/csv"
         )
-        recipient_email = st.text_input("Recipient Email Address")
-        if st.button("Send via Gmail"):
-            if recipient_email and "@" in recipient_email:
-                SEND_FILE(recipient_email)
-                st.success(f"File sent successfully to {recipient_email}!")
-                os.remove(["processed_invoice.jpg", "temp_page_image.png", "final_binarized_invoice.jpg"] )
-            else:
-                st.error("Please enter a valid email address.")
+        st.subheader("Send Extracted Data via Email")
+        email_dialog_box()
 
 
 def app():
-    pages = ["Main Page", "Settings"]
-    selected_page = st.sidebar.radio("Select a page:", pages)
+    st.set_page_config(layout="wide")
+    # Use tabs for navigation instead of sidebar radio button
+    tab1, tab2 = st.tabs(["📄 Main Page", "⚙️ Settings"])
 
-    if selected_page == "Main Page":
-        main_page()
-    elif selected_page == "Settings":
+    with tab1:
+        st.sidebar.header("Upload Method")
+        input_method = st.sidebar.radio("Choose an option:", ("Upload File", "Fetch from Gmail"))
+        main_page(input_method)
+
+    with tab2:
+        st.session_state["current_tab"] = "Settings"
         settings_page()
 
+    # Close App Button
+    st.sidebar.markdown("---")
+    if st.sidebar.button("❌ Close App"):
+        st.warning("Shutting down the app...")
+        delete_files()  # Ensure cleanup before closing
+        os._exit(0)  # Forcefully exit the app
 if __name__ == "__main__":
     app()
