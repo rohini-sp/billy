@@ -33,7 +33,7 @@ To get started with Billy - the Invoicer, follow these steps:
 ```bash http://localhost:8501 ```
 
 ### Demo
-[![Watch the video](https://raw.githubusercontent.com/rohini-sp/billy/main/Demonstration of Billy.mp4)
+[![Watch the video](https://raw.githubusercontent.com/rohini-sp/billy/Demonstration of Billy.mp4)
 
 
 
