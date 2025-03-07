@@ -11,7 +11,7 @@ Billy&trade; is a Streamlit app designed to help users generate and manage invoi
 
 ## Installation
 
-To get started with Invoiceer, follow these steps:
+To get started with Billy - the Invoicer, follow these steps:
 
 ### Prerequisites
 
@@ -31,4 +31,7 @@ To get started with Invoiceer, follow these steps:
 ```bash streamlit run app.py```
 5. Open the app in your browser (it will typically open automatically):
 ```bash http://localhost:8501 ```
+
+### Demo Link
+Drive link: https://drive.google.com/drive/folders/1VIKB4_qrrGO-RkFcMixc_9qzwrirtF0C?usp=drive_link
 
