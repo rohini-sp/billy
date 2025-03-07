@@ -32,6 +32,12 @@ To get started with Billy - the Invoicer, follow these steps:
 5. Open the app in your browser (it will typically open automatically):
 ```bash http://localhost:8501 ```
 
-### Demo Link
+### Demo
+    <video width="600" controls>
+        <source src="Demonstration of Billy.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    
+</video>
+
 Drive link: https://drive.google.com/drive/folders/1VIKB4_qrrGO-RkFcMixc_9qzwrirtF0C?usp=drive_link
 
